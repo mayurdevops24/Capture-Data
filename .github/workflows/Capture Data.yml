@@ -1,4 +1,4 @@
-name: Capture Data from POST Request and Upload Artifact
+name: Capture Data and Save as JSON
 
 on:
   workflow_dispatch:  # Manual trigger
@@ -13,8 +13,8 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Make POST request and capture title from response
-        id: capture-title
+      - name: Make POST request and capture data as JSON
+        id: capture-data
         run: |
           # Set the data for the POST request
           post_data='{"key1":"value1","key2":"value2"}'
@@ -24,14 +24,11 @@ jobs:
             -H "Content-Type: application/json" \
             -d "$post_data")
           
-          # Extract title from the JSON response using jq
-          title=$(echo $response | jq -r '.title')  # Extract title
-          
-          # Save the title to a text file
-          echo $title > title.txt
+          # Capture the entire response as JSON
+          echo $response > response.json  # Save the entire JSON response
 
-      - name: Upload title as artifact
+      - name: Upload JSON response as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: post-response-title
-          path: title.txt
+          name: post-response-json
+          path: response.json
