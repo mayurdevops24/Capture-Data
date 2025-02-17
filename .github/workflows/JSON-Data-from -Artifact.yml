@@ -1,10 +1,10 @@
-name: Process JSON from post-response-json.zip Artifact
+name: Process JSON from post-response-json.zip
 
 on:
   workflow_run:
-    workflows: ["Capture Data and Save as JSON"]
+    workflows: ["Capture Data and Save as JSON"]  # Name of Workflow 1
     types:
-      - completed
+      - completed  # Trigger this workflow when Workflow 1 completes
 
 jobs:
   process-json:
@@ -16,7 +16,9 @@ jobs:
       - name: Download ZIP artifact from Workflow 1
         uses: actions/download-artifact@v4
         with:
-          name: post-response-json
+          name: post-response-json  # Artifact name must match exactly
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.head_commit.id }}  # Automatically use the correct run-id of Workflow 1
 
       - name: Unzip the artifact
         run: |
