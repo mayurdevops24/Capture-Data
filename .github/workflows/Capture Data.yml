@@ -1,4 +1,4 @@
-name: Capture Data and Save as JSON
+name: POST Request with curl to Public API and Process Response
 
 on:
   push:
@@ -6,17 +6,52 @@ on:
       - main
 
 jobs:
-  upload-artifact:
+  post-request-and-process:
     runs-on: ubuntu-latest
+
     steps:
+      # Step 1: Checkout the code (if needed)
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create a ZIP file (if needed)
-        run: zip -r post-response-json.zip response.json  # Assuming you want to ZIP the file before uploading
+      # Step 2: Send a POST request using curl and capture the response
+      - name: Send POST request to public API
+        run: |
+          # The URL of the public API endpoint
+          URL="https://jsonplaceholder.typicode.com/posts"  # Example public API for testing
 
-      - name: Upload artifact
+          # JSON data to be sent in the POST request
+          POST_DATA='{
+            "title": "foo",
+            "body": "bar",
+            "userId": 1
+          }'
+
+          # Sending the POST request using curl and saving the response as JSON
+          curl -X POST $URL \
+            -H "Content-Type: application/json" \
+            -d "$POST_DATA" \
+            -o response.json
+
+      # Step 3: Check if the JSON response file was created
+      - name: Verify response.json file
+        run: |
+          if [ -f "response.json" ]; then
+            echo "POST request successful, response saved as response.json"
+          else
+            echo "Failed to save response."
+            exit 1
+          fi
+
+      # Step 4: Process the response (optional, for example, print the title)
+      - name: Process POST response JSON
+        run: |
+          # Display the response body (e.g., title from the JSON response)
+          cat response.json
+
+      # Step 5: Upload the JSON response as an artifact (optional)
+      - name: Upload response.json as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: post-response-json  # Make sure this name matches exactly with what you're using in Workflow 2
-          path: post-response-json.zip
+          name: post-response-json
+          path: response.json
