@@ -1,52 +1,35 @@
-name: Process JSON from post-response-json.zip
+name: Use JSON Data from Previous Workflow
 
 on:
   workflow_run:
-    workflows: ["Capture Data and Save as JSON"]  # Name of Workflow 1
+    workflows: ["Send POST Request and Store JSON Data"]
     types:
-      - completed  # Trigger this workflow when Workflow 1 completes
+      - completed
 
 jobs:
-  process-json:
+  download-and-process-json:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
 
-      - name: Download ZIP artifact from Workflow 1
+    steps:
+      # Step 1: Download the artifact containing the JSON response
+      - name: Download post-response-json artifact
         uses: actions/download-artifact@v4
         with:
-          name: post-response-json  # Artifact name must match exactly
-          repository: ${{ github.repository }}
-          run-id: ${{ github.event.workflow_run.head_commit.id }}  # Automatically use the correct run-id of Workflow 1
+          name: post-response-json
 
-      - name: Unzip the artifact
+      # Step 2: Process the JSON data (e.g., extract title)
+      - name: Extract title from JSON response
         run: |
-          unzip post-response-json.zip
+          # Install jq if not already installed
+          sudo apt-get install jq
 
-      - name: Process JSON data
+          # Extract the title from the response JSON
+          TITLE=$(jq -r '.title' post-response-json/response.json)
+
+          echo "Extracted Title: $TITLE"
+
+      # Step 3: Optionally use the extracted data or process further
+      - name: Use the extracted data
         run: |
-          # Ensure the JSON file was extracted
-          if [ -f "response.json" ]; then
-            echo "JSON file extracted successfully!"
-          else
-            echo "JSON file not found!"
-            exit 1
-          fi
-          
-          # Parse the JSON file to extract specific data
-          title=$(jq -r '.title' response.json)
-          body=$(jq -r '.body' response.json)
-          
-          # Output the captured data
-          echo "Title: $title"
-          echo "Body: $body"
-          
-          # Store the data into a new JSON file
-          echo "{\"title\": \"$title\", \"body\": \"$body\"}" > processed_data.json
-
-      - name: Upload processed data as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: processed-data
-          path: processed_data.json
+          # Example: Print the extracted data (title)
+          echo "Title extracted: $TITLE"
