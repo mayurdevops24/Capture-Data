@@ -1,0 +1,37 @@
+name: Capture Data from POST Request and Upload Artifact
+
+on:
+  workflow_dispatch:  # Manual trigger
+  push:
+    branches:
+      - main
+
+jobs:
+  post-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Make POST request and capture title from response
+        id: capture-title
+        run: |
+          # Set the data for the POST request
+          post_data='{"key1":"value1","key2":"value2"}'
+          
+          # Make the POST request using curl and capture the response
+          response=$(curl -s -X POST https://jsonplaceholder.typicode.com/posts \
+            -H "Content-Type: application/json" \
+            -d "$post_data")
+          
+          # Extract title from the JSON response using jq
+          title=$(echo $response | jq -r '.title')  # Extract title
+          
+          # Save the title to a text file
+          echo $title > title.txt
+
+      - name: Upload title as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: post-response-title
+          path: title.txt
