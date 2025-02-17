@@ -1,10 +1,10 @@
-name: Use Data from JSON Artifact
+name: Process JSON from post-response-json.zip Artifact
 
 on:
-  workflow_dispatch:  # Manually triggered
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["Capture Data and Save as JSON"]
+    types:
+      - completed
 
 jobs:
   process-json:
@@ -13,23 +13,25 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Download JSON artifact from Workflow 1
+      - name: Download ZIP artifact from Workflow 1
         uses: actions/download-artifact@v4
         with:
-          name: post-response-json  # Match the artifact name from Workflow 1
+          name: post-response-json
 
-      - name: Check if JSON artifact is downloaded
+      - name: Unzip the artifact
         run: |
-          # Ensure the artifact was downloaded
-          if [ -f "response.json" ]; then
-            echo "Artifact downloaded successfully!"
-          else
-            echo "Artifact not found!"
-            exit 1
-          fi
+          unzip post-response-json.zip
 
       - name: Process JSON data
         run: |
+          # Ensure the JSON file was extracted
+          if [ -f "response.json" ]; then
+            echo "JSON file extracted successfully!"
+          else
+            echo "JSON file not found!"
+            exit 1
+          fi
+          
           # Parse the JSON file to extract specific data
           title=$(jq -r '.title' response.json)
           body=$(jq -r '.body' response.json)
