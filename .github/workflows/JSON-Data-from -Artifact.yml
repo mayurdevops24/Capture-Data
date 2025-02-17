@@ -1,10 +1,10 @@
 name: Use Data from JSON Artifact
 
 on:
-  workflow_run:
-    workflows: ["Capture Data and Save as JSON"]
-    types:
-      - completed
+  workflow_dispatch:  # Manually triggered
+  push:
+    branches:
+      - main
 
 jobs:
   process-json:
@@ -16,19 +16,29 @@ jobs:
       - name: Download JSON artifact from Workflow 1
         uses: actions/download-artifact@v4
         with:
-          name: post-response-json  # The artifact name from Workflow 1
+          name: post-response-json  # Match the artifact name from Workflow 1
+
+      - name: Check if JSON artifact is downloaded
+        run: |
+          # Ensure the artifact was downloaded
+          if [ -f "response.json" ]; then
+            echo "Artifact downloaded successfully!"
+          else
+            echo "Artifact not found!"
+            exit 1
+          fi
 
       - name: Process JSON data
         run: |
           # Parse the JSON file to extract specific data
-          title=$(jq -r '.title' response.json)  # Assuming the response has a 'title' field
-          body=$(jq -r '.body' response.json)    # Assuming the response has a 'body' field
+          title=$(jq -r '.title' response.json)
+          body=$(jq -r '.body' response.json)
           
-          # Output the captured data to verify
+          # Output the captured data
           echo "Title: $title"
           echo "Body: $body"
           
-          # Store the data into a new JSON file for further use
+          # Store the data into a new JSON file
           echo "{\"title\": \"$title\", \"body\": \"$body\"}" > processed_data.json
 
       - name: Upload processed data as artifact
