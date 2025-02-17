@@ -1,34 +1,22 @@
 name: Capture Data and Save as JSON
 
 on:
-  workflow_dispatch:  # Manual trigger
   push:
     branches:
       - main
 
 jobs:
-  post-request:
+  upload-artifact:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Make POST request and capture data as JSON
-        id: capture-data
-        run: |
-          # Set the data for the POST request
-          post_data='{"key1":"value1","key2":"value2"}'
-          
-          # Make the POST request using curl and capture the response
-          response=$(curl -s -X POST https://jsonplaceholder.typicode.com/posts \
-            -H "Content-Type: application/json" \
-            -d "$post_data")
-          
-          # Capture the entire response as JSON
-          echo $response > response.json  # Save the entire JSON response
+      - name: Create a ZIP file (if needed)
+        run: zip -r post-response-json.zip response.json  # Assuming you want to ZIP the file before uploading
 
-      - name: Upload JSON response as artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: post-response-json
-          path: response.json
+          name: post-response-json  # Make sure this name matches exactly with what you're using in Workflow 2
+          path: post-response-json.zip
